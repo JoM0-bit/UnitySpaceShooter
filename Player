@@ -1,0 +1,290 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Player : MonoBehaviour
+{
+    [SerializeField]
+    private float _Score = 0;
+
+    [SerializeField]
+    private float comboModifer = 1.0f;
+
+    [SerializeField]
+    private float _speed = 7f;
+
+    [SerializeField]
+    private float _firerate = 0.5f;
+
+    private float _canfire = 0f;
+
+    [SerializeField]
+    private float TripleshotCooldown = 10.0f;
+
+    [SerializeField]
+    private float SpeedBoostCooldown = 15.0f;
+
+    [SerializeField]
+    private int _health = 3;
+
+    
+
+
+    [SerializeField]
+    private GameObject _laserprefab;
+
+    [SerializeField]
+    private GameObject _tripleshotprefab;
+
+    [SerializeField]
+    private GameObject _sheild;
+
+    [SerializeField]
+    private GameObject _Fire1;
+
+    [SerializeField]
+    private GameObject _Fire2;
+
+    [SerializeField]
+    private GameObject _Thruster;
+
+
+
+
+    [SerializeField]
+    private bool _tripleshotEnable = false;
+
+    [SerializeField]
+    private bool SheildEnabled = false;
+
+
+
+
+    private UI_Manager UIManager;
+
+    private Game_Manager GameManager;
+
+    private AudioSource _AudioSource;
+
+    [SerializeField]
+    private AudioClip _laserAudio;
+
+    private Animator _animator;
+
+
+
+
+    void Start()
+    {
+        transform.position = new Vector3(0,0,0);
+        UIManager = GameObject.Find("UI_Manager").GetComponent<UI_Manager>();
+        GameManager = GameObject.Find("Game_Manager").GetComponent<Game_Manager>();
+        _AudioSource = GetComponent<AudioSource>();
+        _animator = gameObject.GetComponent<Animator>();
+
+        if (_animator == null)
+        {
+            Debug.LogError("Animator is Null");
+            Debug.Log("Animator is not null");
+        }
+
+
+        if (UIManager == null)
+        {
+            Debug.LogError("UI MANAGER NULL");
+        }
+
+        if(_AudioSource == null)
+        {
+            Debug.LogError("Audio Source is NULL");
+        }
+
+        else
+        {
+            _AudioSource.clip = _laserAudio;
+        }
+
+    }
+
+    
+    void Update()
+    {
+        Movement();
+        Laser();
+
+    }
+
+
+
+    void Laser()
+        {
+        
+        if (Input.GetKeyDown(KeyCode.Space) && Time.time > _canfire)
+        {
+            _AudioSource.Play();
+            if (_tripleshotEnable == true)
+            {
+                _canfire = Time.time + _firerate;
+                Instantiate(_tripleshotprefab,transform.position + new Vector3(-1.580349f, 0.8f,0),Quaternion.identity);
+            }
+            else
+            {
+                _canfire = Time.time + _firerate;
+                Instantiate(_laserprefab, transform.position + new Vector3(0, 0.8f, 0), Quaternion.identity);
+            }
+            
+        }
+    }
+    
+
+
+    void Movement()
+    {
+        float horizontalInput = Input.GetAxis("Horizontal");
+        float verticalInput = Input.GetAxis("Vertical");
+
+        if( horizontalInput < 0)
+        {
+            _animator.SetBool("IsTurningLeft", true);
+        }
+        else if(horizontalInput <= 0)
+        {
+            _animator.SetBool("IsTurningLeft", false);
+        }
+
+        if( horizontalInput > 0)
+        {
+            _animator.SetBool("IsTurningRight", true);
+        }
+        else if(horizontalInput >= 0)
+        {
+            _animator.SetBool("IsTurningRight",false);
+        }
+
+        transform.Translate(new Vector3(horizontalInput, verticalInput, 0) * _speed * Time.deltaTime);
+
+
+        if (transform.position.y >= 5.35f)
+        {
+            transform.position = new Vector3(transform.position.x, 5.35f, 0);
+        }
+
+        else if (transform.position.y <= -3.9f)
+        {
+            transform.position = new Vector3(transform.position.x, -3.9f, 0);
+        }
+
+        if (transform.position.x < -11.27043)
+        {
+            transform.position = new Vector3(11.27043f, transform.position.y, 0);
+        }
+
+        if (transform.position.x > 11.27043)
+        {
+            transform.position = new Vector3(-11.27043f, transform.position.y, 0);
+        }
+    }
+
+
+
+    public void Damage()
+    {
+        if (SheildEnabled == true)
+        {
+            SheildEnabled = false;
+            _sheild.SetActive(false);
+            return;
+        }
+
+        _health--;
+
+        UIManager.updateLives(_health);
+        
+
+        comboModifer = 1.0f;
+
+        if (_health == 2)
+        {
+            _Fire1.SetActive(true);
+        }
+
+        if (_health == 1)
+        {
+            _Fire2.SetActive(true);
+        }
+        
+        if (_health == 0)
+        {
+            _animator.SetBool("IsDead",true);
+            _Fire1.SetActive(false);
+            _Fire2.SetActive(false);
+            _Thruster.SetActive(false);
+            
+            _speed = 0;
+            
+            Destroy(this.gameObject,2.4f);
+            
+            SpawnManager spawnManager = GameObject.Find("SpawnManager").GetComponent<SpawnManager>();
+
+            
+            if(spawnManager == null)
+            {
+                Debug.LogError("Spawn Manager is NULL");
+            }
+
+            spawnManager.OnPlayerDeath();
+            UIManager.updateGameover();
+            GameManager.GameOver();
+
+        }
+    }
+
+
+
+    IEnumerator SpeedBoostRoutine()
+    {
+        yield return new WaitForSeconds(SpeedBoostCooldown);
+        _speed = 7f;
+    }
+
+
+    public void SpeedBoostEnable()
+    {
+        _speed = 10;
+        StartCoroutine(SpeedBoostRoutine());
+    }
+
+
+    IEnumerator TripleshotRoutine()
+    {
+        yield return new WaitForSeconds(TripleshotCooldown);
+        _tripleshotEnable = false;
+    }
+
+
+    public void TripleShotEnable()
+    {
+        _tripleshotEnable = true;
+        StartCoroutine(TripleshotRoutine());
+       
+    }
+
+    
+    public void SheildsEnable()
+    {
+        SheildEnabled = true;
+        _sheild.SetActive(true);
+    }
+
+
+    public void addScore(float points)
+    {
+        
+        _Score += (points * comboModifer);
+        comboModifer += 0.1f;
+        UIManager.updateScore(_Score);
+    }
+
+
+
+}
