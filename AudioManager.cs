@@ -6,8 +6,6 @@ public class AudioManager : MonoBehaviour
 {
     private AudioSource _AudioSource;
 
-
-    // Start is called before the first frame update
     void Start()
     {
         _AudioSource = GetComponent<AudioSource>();
@@ -27,4 +25,7 @@ public class AudioManager : MonoBehaviour
     {
         _AudioSource.Play();
     }
+ 
+
+   
 }

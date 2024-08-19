@@ -10,6 +10,14 @@ public class Enemy : MonoBehaviour
 
     private Player _player;
 
+    [SerializeField]
+    private GameObject _laserprefab;
+
+    private float _canfire = 0f;
+
+    [SerializeField]
+    private float _firerate = 3.5f;
+
     private int Enemypoints = 100;
 
     private Animator _animator;
@@ -19,7 +27,12 @@ public class Enemy : MonoBehaviour
     private AudioManager _audioManager;
 
     [SerializeField]
+    private AudioClip _laserAudio;
+
+    [SerializeField]
     private AudioClip _explosionClip;
+
+    private bool isDead = false;
 
     void Start()
     {
@@ -52,6 +65,7 @@ public class Enemy : MonoBehaviour
     void Update()
     {
         Movement();
+        Fire();
     }
 
     void Movement()
@@ -64,11 +78,33 @@ public class Enemy : MonoBehaviour
         }
     }
 
+    void Fire()
+    {
+        StartCoroutine(EnemyFire());
+    }
+
+    IEnumerator EnemyFire()
+    {
+        if (isDead == true)
+        {
+            yield break;
+        }
+        if (Time.time > _canfire)
+        {
+            _firerate = Random.Range(1.0f, 6.0f);
+            _canfire = Time.time + _firerate;
+            Instantiate(_laserprefab, transform.position + new Vector3(0, -2.0f, 0), Quaternion.identity);
+        }
+        
+    
+}
+
     private void OnTriggerEnter2D(Collider2D other)
     {
         _audioManager.explosion();
         if (other.tag == "Player")
         {
+            isDead = true;
             other.transform.GetComponent<Player>().Damage();
             _animator.SetTrigger("OnEnemyDeath");
             Destroy(_boxCollider);
@@ -80,6 +116,7 @@ public class Enemy : MonoBehaviour
         
         if (other.tag == "Projectile")
         {
+            isDead = true;
             _animator.SetTrigger("OnEnemyDeath");
             Destroy(_boxCollider);
             Destroy(this.gameObject,2.8f);
@@ -89,11 +126,8 @@ public class Enemy : MonoBehaviour
             {
                 _player.addScore(Enemypoints);
             }
-                
                 Destroy(other.gameObject);
-            }
+         }
         
     }
-
-
 }

@@ -23,8 +23,6 @@ public class SpawnManager : MonoBehaviour
     private Vector3[] SpawnPos;
 
 
-     
-
 
     void Start()
     {
@@ -83,9 +81,6 @@ public class SpawnManager : MonoBehaviour
             int randomAsteriod = Random.Range(0, 3);
             GameObject newAsteriod = Instantiate(Asteroids[randomAsteriod], SpawnPos[randomLocation], Quaternion.identity);
             newAsteriod.gameObject.GetComponent<Asteroid>().updateMovment(randomLocation);
-
-
-
             yield return new WaitForSeconds(Random.Range(5,25));
         }
     }
@@ -93,7 +88,6 @@ public class SpawnManager : MonoBehaviour
     public void OnPlayerDeath()
     {
         isDead = true;
-        
     }
 
 }

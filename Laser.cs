@@ -18,8 +18,8 @@ public class Laser : MonoBehaviour
     {
         transform.Translate(Vector3.up  * speed_ * Time.deltaTime);
 
-        if (transform.position.y >= 7.2)
-            {
+        if (transform.position.y >= 7.2 || transform.position.y <= -7.2)
+        {
             Destroy(this.gameObject);
 
             if (transform.parent != null)

@@ -26,7 +26,6 @@ public class Asteroid : MonoBehaviour
 
     AudioManager _audioManager;
 
-    
 
 
     void Start()
@@ -98,7 +97,6 @@ public class Asteroid : MonoBehaviour
     {
         if (direction == 0)
         {
-            
             MovingUp = true;
         }
         
